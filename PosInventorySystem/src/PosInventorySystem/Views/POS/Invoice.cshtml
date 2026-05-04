@@ -1,0 +1,150 @@
+@model PosInventorySystem.Models.Sale
+@{
+    ViewData["Title"] = "Invoice - " + Model.InvoiceNumber;
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card invoice-card">
+                <div class="card-body">
+                    <!-- Invoice Header -->
+                    <div class="text-center mb-4">
+                        <h2 class="invoice-title"><i class="bi bi-receipt"></i> TAX INVOICE</h2>
+                        <p class="text-muted">@ViewData["CompanyName"]</p>
+                    </div>
+
+                    <!-- Invoice Info -->
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <strong>Invoice #:</strong> @Model.InvoiceNumber<br />
+                            <strong>Date:</strong> @Model.SaleDate.ToString("dd-MMM-yyyy HH:mm")<br />
+                            <strong>Cashier:</strong> @(Model.Cashier?.FullName ?? "Unknown")
+                        </div>
+                        <div class="col-6 text-end">
+                            <strong>Customer:</strong> @(Model.CustomerName ?? "Walk-in Customer")<br />
+                            <strong>Phone:</strong> @(Model.CustomerPhone ?? "N/A")
+                        </div>
+                    </div>
+
+                    <!-- Items Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered invoice-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Item</th>
+                                    <th>Barcode</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ int i = 1; }
+                                @if (Model.SaleItems != null)
+                                {
+                                    foreach (var item in Model.SaleItems)
+                                    {
+                                        <tr>
+                                            <td>@i</td>
+                                            <td>@item.Product?.Name</td>
+                                            <td><small>@item.Product?.Barcode</small></td>
+                                            <td class="text-center">@item.Quantity</td>
+                                            <td class="text-end">@item.UnitPrice.ToString("N2")</td>
+                                            <td class="text-end">@item.TotalAmount.ToString("N2")</td>
+                                        </tr>
+                                        i++;
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Totals -->
+                    <div class="row">
+                        <div class="col-6">
+                            <p><strong>Payment Method:</strong> @Model.PaymentMethod</p>
+                            @if (!string.IsNullOrEmpty(Model.Notes))
+                            {
+                                <p><strong>Notes:</strong> @Model.Notes</p>
+                            }
+                        </div>
+                        <div class="col-6">
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td>Subtotal:</td>
+                                    <td class="text-end">@Model.SubTotal.ToString("N2") PKR</td>
+                                </tr>
+                                <tr>
+                                    <td>Tax (@Model.TaxPercentage%):</td>
+                                    <td class="text-end">@Model.TaxAmount.ToString("N2") PKR</td>
+                                </tr>
+                                @if (Model.DiscountAmount > 0)
+                                {
+                                    <tr>
+                                        <td>Discount:</td>
+                                        <td class="text-end text-danger">-@Model.DiscountAmount.ToString("N2") PKR</td>
+                                    </tr>
+                                }
+                                <tr class="fw-bold fs-5">
+                                    <td>Grand Total:</td>
+                                    <td class="text-end text-primary">@Model.GrandTotal.ToString("N2") PKR</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p class="mb-1"><strong>Thank you for your business!</strong></p>
+                        <p class="text-muted small">Live Developed By <strong>Saad Tech</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center mt-3 no-print">
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="bi bi-printer"></i> Print Invoice
+                </button>
+                <a asp-controller="POS" asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> New Sale
+                </a>
+                <a asp-controller="Reports" asp-action="ExportDailySales" 
+                   asp-route-date="@Model.SaleDate.Date" class="btn btn-outline-success">
+                    <i class="bi bi-download"></i> Export XML
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .no-print { display: none !important; }
+    body { background: white; }
+    .invoice-card { box-shadow: none !important; border: none !important; }
+}
+.invoice-card {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+.invoice-title {
+    color: #2c3e50;
+    font-weight: bold;
+}
+.invoice-table th, .invoice-table td {
+    vertical-align: middle;
+}
+</style>
+
+<script>
+@if (TempData["Success"] != null)
+{
+    <text>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => window.print(), 500);
+    });
+    </text>
+}
+</script>
